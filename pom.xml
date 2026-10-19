@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        Spring Boot parent POM manages dependency versions for the entire Spring ecosystem.
+        By inheriting from it, we don't have to specify versions for Spring dependencies manually —
+        the parent resolves compatible, tested versions for us.
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.3</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.cognara</groupId>
+    <artifactId>cognara-backend</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>cognara-backend</name>
+    <description>Cognara – Multi-tenant AI knowledge and customer-support platform (backend)</description>
+
+    <properties>
+        <!-- Target Java 21 (LTS). Even though JDK 25 is installed, we compile to
+             Java 21 bytecode so the code stays compatible with Java 21 LTS runtimes. -->
+        <java.version>21</java.version>
+    </properties>
+
+    <dependencies>
+
+        <!--
+            spring-boot-starter-web: Pulls in Spring MVC + an embedded Tomcat server.
+            This is what lets you write @RestController classes and have them served
+            over HTTP without deploying to an external server.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            spring-boot-starter-data-jpa: Brings in Hibernate (a JPA implementation) and
+            Spring Data JPA. JPA (Jakarta Persistence API) is a standard Java specification
+            for mapping Java objects to relational database tables (ORM).
+            Spring Data JPA adds repository interfaces so you get CRUD operations for free.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!--
+            spring-boot-starter-actuator: Exposes production-ready endpoints like
+            /actuator/health and /actuator/info. Useful for monitoring whether the
+            application (and its database connection) is alive.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+            postgresql: The JDBC driver that allows Java (and Hibernate) to communicate
+            with a running PostgreSQL database server. JDBC is Java's standard API
+            for relational databases.
+        -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!--
+            spring-boot-starter-validation: Provides Jakarta Bean Validation (Hibernate Validator)
+            for @Valid, @NotBlank, @Size, @Email annotations on request DTOs.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!--
+            spring-boot-starter-test: Pulls in JUnit 5, Mockito, AssertJ, and
+            Spring's MockMvc testing support. Used only during the test phase.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            h2: In-memory relational database used for integration/repository tests
+            so they run quickly in isolated test slices without an external PostgreSQL server.
+        -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+                spring-boot-maven-plugin: Packages the application into an executable
+                "fat JAR" (a single .jar file that contains all dependencies). This lets
+                you run the app with: java -jar target/cognara-backend-*.jar
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,35 @@
+# .gitignore for Cognara Backend (Java / Spring Boot / Maven)
+
+# ─── Compiled output ──────────────────────────────────────────────────────────
+target/
+*.class
+
+# ─── Maven wrapper jar (downloaded on demand, not committed) ──────────────────
+.mvn/wrapper/maven-wrapper.jar
+
+# ─── IDE files ────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.code-workspace
+*.eclipse
+.project
+.classpath
+.settings/
+
+# ─── OS files ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Environment / secrets ────────────────────────────────────────────────────
+# Never commit .env files or anything containing credentials
+.env
+*.env
+application-local.properties
+application-secret.properties
