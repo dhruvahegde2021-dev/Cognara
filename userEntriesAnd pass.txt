@@ -1,0 +1,16 @@
+Jane doe:
+ password:JaneDoe123
+company:GreenBasket Trail
+
+Rahul Sharma:
+password:RahulSharma123
+company:NovaTech Solutions
+
+Priya Nair:
+password:PriyaNair123
+company:BrightPath Acadmey
+
+Arjun Mehta:
+password:ArjunMehta123
+company:Acme Technologies
+
