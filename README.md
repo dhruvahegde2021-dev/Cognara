@@ -39,35 +39,11 @@ C:\Program Files\PostgreSQL\18\bin\psql.exe -U postgres
 
 ---
 
-## Environment Variables
+## Local configuration
 
-The application reads database credentials from environment variables.
-**Never hardcode secrets in source files.**
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DB_HOST` | PostgreSQL host | `localhost` (default) |
-| `DB_PORT` | PostgreSQL port | `5432` (default) |
-| `DB_NAME` | Database name | `cognara` (default) |
-| `DB_USERNAME` | Database user | `cognara_user` |
-| `DB_PASSWORD` | Database password | `your_strong_password` |
-
-### Setting variables for the current PowerShell session
-
-```powershell
-$env:DB_USERNAME = "cognara_user"
-$env:DB_PASSWORD = "your_strong_password"
-# DB_HOST, DB_PORT, DB_NAME default to localhost:5432/cognara if not set
-```
-
-### Setting variables permanently (Windows)
-
-```powershell
-[System.Environment]::SetEnvironmentVariable("DB_USERNAME", "cognara_user", "User")
-[System.Environment]::SetEnvironmentVariable("DB_PASSWORD", "your_strong_password", "User")
-```
-
-> **Tip:** Open a new terminal after setting permanent variables for them to take effect.
+Copy `application-local.properties.example` to `application-local.properties` in
+the project root. The real local file is ignored by Git, so passwords and the JWT
+signing key remain outside version control without using environment variables.
 
 ---
 
@@ -94,7 +70,7 @@ Expected output:
 
 ## Running the Application
 
-Make sure the environment variables are set (see above), then:
+Create `application-local.properties` as described above, then:
 
 ```powershell
 # 1. Package and run
@@ -218,7 +194,7 @@ Creates a new tenant organization.
 - `409 Conflict`: If a company with the given `slug` already exists.
 
 ### `GET /api/companies/{id}`
-Retrieves company details by UUID.
+Retrieves company details by UUID. Requires a Bearer token for the same company.
 
 **Response `200 OK`:**
 ```json
@@ -231,15 +207,60 @@ Retrieves company details by UUID.
 ```
 
 **Errors:**
-- `404 Not Found`: If no company exists with the given ID.
+- `401 Unauthorized`: If the request has no valid Bearer token.
+- `403 Forbidden`: If the token belongs to another company.
+
+### `POST /api/auth/login`
+Authenticates a user within a company and returns a signed JWT. The same email may
+exist for another company, so `companyId` is required.
+
+```json
+{
+  "companyId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "email": "support@acme.test",
+  "password": "your-password"
+}
+```
+
+The response contains `token` and `tokenType` (`Bearer`). Send it as
+`Authorization: Bearer <token>` for protected endpoints.
+
+### `POST /api/users`
+Creates a user in the authenticated user's company. The request `companyId` must
+match the `companyId` claim in the JWT; a token from another tenant receives 403.
+
+### `GET /api/users/{id}`
+Retrieves a user only when that user belongs to the JWT's company. A cross-tenant
+lookup returns 404 to avoid exposing the other tenant's user record.
+
+## Security configuration
+
+Copy `application-local.properties.example` to `application-local.properties`, then
+set the database and JWT values in that local, gitignored file:
+
+```properties
+cognara.local.db-url=jdbc:postgresql://localhost:5432/cognara
+cognara.local.db-username=postgres
+cognara.local.db-password=your_database_password
+cognara.local.jwt-secret=a-random-secret-with-at-least-32-bytes
+```
+
+JWTs are stateless HMAC-SHA256 tokens containing the user ID (`sub`), email, and
+company ID. Invalid, expired, or malformed tokens never populate the security context.
+There are deliberately no refresh tokens in this milestone.
+
+Company registration remains public. Since this model does not yet contain roles or
+an atomic company-plus-owner registration flow, provisioning the first user for a
+new company remains an operational bootstrap step. Do not relax the protected user
+creation endpoint to solve that gap; add an explicit ownership/registration design
+in a later milestone.
 
 ---
 
 ## What's Not Implemented Yet
 
-- User management endpoints & registration flows
-- Authentication & JWT token issuance
-- Security filters for runtime tenant context resolution
+- Roles/permissions and a safe first-owner registration flow
+- Refresh-token/session revocation support
 - Document upload and management
 - AI / embedding / vector search
 - Frontend

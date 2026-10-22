@@ -73,4 +73,11 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User with ID '" + id + "' not found"));
         return UserResponse.fromEntity(user);
     }
+
+    /** Retrieves a user only when it belongs to the authenticated tenant. */
+    public UserResponse getUserByIdForCompany(UUID id, UUID companyId) {
+        User user = userRepository.findByIdAndCompanyId(id, companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID '" + id + "' not found"));
+        return UserResponse.fromEntity(user);
+    }
 }

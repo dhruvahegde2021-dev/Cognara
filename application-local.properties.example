@@ -1,0 +1,10 @@
+# Copy this file to application-local.properties (which is gitignored), then enter local values.
+# This keeps credentials and JWT keys out of source control and avoids environment variables.
+cognara.local.db-url=jdbc:postgresql://localhost:5432/cognara
+cognara.local.db-username=postgres
+cognara.local.db-password=replace-with-your-database-password
+
+# Use a randomly generated value of at least 32 bytes. Never commit the real value.
+cognara.local.jwt-secret=replace-with-a-random-secret-at-least-32-bytes-long
+# Optional: 24 hours in milliseconds.
+cognara.local.jwt-expiration-ms=86400000

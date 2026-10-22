@@ -6,6 +6,10 @@ import com.cognara.common.exception.ResourceNotFoundException;
 import com.cognara.company.dto.CompanyResponse;
 import com.cognara.company.dto.CreateCompanyRequest;
 import com.cognara.company.service.CompanyService;
+import com.cognara.config.SecurityConfig;
+import com.cognara.security.CustomAuthenticationEntryPoint;
+import com.cognara.security.JwtService;
+import com.cognara.security.UserPrincipal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,21 +19,24 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * WebMvc unit test testing CompanyController endpoints, validation, and error translation.
  */
 @WebMvcTest(CompanyController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class})
 class CompanyControllerTest {
 
     @Autowired
@@ -40,6 +47,12 @@ class CompanyControllerTest {
 
     @MockitoBean
     private CompanyService companyService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Test
     @DisplayName("POST /api/companies succeeds with 201 Created and response body")
@@ -112,7 +125,10 @@ class CompanyControllerTest {
 
         when(companyService.getCompanyById(companyId)).thenReturn(mockResponse);
 
-        mockMvc.perform(get("/api/companies/{id}", companyId))
+        mockMvc.perform(get("/api/companies/{id}", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(
+                                new UserPrincipal(UUID.randomUUID(), "user@acme.test", companyId), null,
+                                Collections.emptyList()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(companyId.toString()))
                 .andExpect(jsonPath("$.name").value("Acme Corporation"))
@@ -126,7 +142,10 @@ class CompanyControllerTest {
         when(companyService.getCompanyById(companyId))
                 .thenThrow(new ResourceNotFoundException("Company with ID '" + companyId + "' not found"));
 
-        mockMvc.perform(get("/api/companies/{id}", companyId))
+        mockMvc.perform(get("/api/companies/{id}", companyId)
+                        .with(authentication(new UsernamePasswordAuthenticationToken(
+                                new UserPrincipal(UUID.randomUUID(), "user@acme.test", companyId), null,
+                                Collections.emptyList()))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))

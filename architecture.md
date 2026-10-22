@@ -11,7 +11,8 @@ The backend is a Spring Boot application structured around domain-driven feature
      ▼
 [Spring Boot App :8080]
   ├── /api/health       ← Health check
-  ├── /api/companies/** ← Company registration & lookup
+  ├── /api/auth/login   ← Public JWT login
+  ├── /api/companies/** ← Company registration & tenant-scoped lookup
   └── /actuator/**      ← Spring Boot Actuator (health, info)
      │
      ▼
@@ -118,6 +119,9 @@ erDiagram
 | GET | `/actuator/health` | None | Actuator health | 200/503 | Actuator health including DB status |
 | POST | `/api/companies` | `CreateCompanyRequest` | `CompanyResponse` | 201 Created | Creates a new tenant organization |
 | GET | `/api/companies/{id}` | None | `CompanyResponse` | 200 OK | Fetches company by UUID |
+| POST | `/api/auth/login` | `LoginRequest` | `AuthResponse` | 200 OK | Authenticates within a company and issues JWT |
+| POST | `/api/users` | `CreateUserRequest` | `UserResponse` | 201 Created | Creates a user only for the JWT company |
+| GET | `/api/users/{id}` | None | `UserResponse` | 200 OK | Fetches a user only within the JWT company |
 
 ### Company Creation Request Flow
 ```
@@ -143,8 +147,17 @@ CompanyService
 - **Credential Protection:** `passwordHash` is stored on `User` but excluded from DTOs. `CompanyResponse` exposes only non-sensitive company metadata.
 - **Input Validation:** Slugs must adhere to lowercase hyphenated format (`^[a-z0-9]+(?:-[a-z0-9]+)*$`).
 
-### Current Boundary Limitation:
-- **Tenant isolation is not yet fully enforced at the network/auth layer.** Until JWT authentication and tenant context resolvers are added in a future milestone, cross-tenant isolation is enforced at the data model and repository level, not by public authorization guards.
+### Runtime Authentication and Tenant Isolation
+- `POST /api/auth/login`, health endpoints, and public company registration are public.
+- All other API endpoints require a `Bearer` JWT; the app does not create HTTP sessions.
+- JWTs are HMAC-SHA256 signed and contain a user UUID (`sub`), email, and `companyId`.
+- JWT verification checks the signature and expiration before installing a `UserPrincipal` in Spring Security's context.
+- Company detail reads require the requested ID to match the authenticated `companyId`.
+- User reads are queried by both ID and tenant ID, so cross-tenant requests return 404 without exposing user membership.
+- User creation requires the request company ID to equal the JWT company ID.
+
+### Remaining Boundary Gap
+- There is no role model or atomic company-plus-owner registration endpoint yet. Public company registration therefore creates a tenant with no user; provisioning its first user must be handled operationally until a dedicated, reviewed onboarding design is added.
 
 ---
 

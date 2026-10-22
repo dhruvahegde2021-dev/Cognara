@@ -29,6 +29,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     Optional<User> findByCompanyIdAndEmail(UUID companyId, String email);
 
+    Optional<User> findByIdAndCompanyId(UUID id, UUID companyId);
+
     /**
      * Check if an email is already taken within a company.
      */

@@ -3,10 +3,13 @@ package com.cognara.company;
 import com.cognara.company.dto.CompanyResponse;
 import com.cognara.company.dto.CreateCompanyRequest;
 import com.cognara.company.service.CompanyService;
+import com.cognara.security.UserPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.net.URI;
 import java.util.UUID;
@@ -63,7 +66,12 @@ public class CompanyController {
      * @return 200 OK with CompanyResponse
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CompanyResponse> getCompanyById(@PathVariable UUID id) {
+    public ResponseEntity<CompanyResponse> getCompanyById(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id) {
+        if (principal == null || !principal.companyId().equals(id)) {
+            throw new AccessDeniedException("You do not have access to this company");
+        }
         CompanyResponse response = companyService.getCompanyById(id);
         return ResponseEntity.ok(response);
     }

@@ -4,7 +4,7 @@
 
 Build a multi-tenant AI knowledge and customer-support platform, learning backend engineering along the way.
 
-## Current Milestone: 2 — Initial Multi-Tenant Domain Foundation
+## Current Milestone: 3 — Authentication and Tenant Security
 
 ---
 
@@ -28,6 +28,9 @@ Build a multi-tenant AI knowledge and customer-support platform, learning backen
 | Global error handling (`GlobalExceptionHandler`, `ApiErrorResponse`) | ✅ Implemented & verified |
 | Unit and integration test suite (12 passing tests) | ✅ Implemented & verified passing |
 | Annotation-based Spring Boot architecture refactor | ✅ Verified & documented |
+| Stateless JWT login and authentication filter | ✅ Implemented |
+| JWT user/company tenant claims | ✅ Implemented |
+| Tenant ownership checks on company and user reads/writes | ✅ Implemented |
 | Project documentation (`architecture.md`, `context.md`, `README.md`) | ✅ Updated |
 
 ---
@@ -64,13 +67,12 @@ Build a multi-tenant AI knowledge and customer-support platform, learning backen
 
 ---
 
-## Environment Variables Required
+## Local Configuration Required
 
-```powershell
-$env:DB_USERNAME = "cognara_user"
-$env:DB_PASSWORD = "your_strong_password"
-# DB_HOST defaults to localhost, DB_PORT to 5432, DB_NAME to cognara
-```
+Copy `application-local.properties.example` to the ignored
+`application-local.properties`, then set `cognara.local.db-url`,
+`cognara.local.db-username`, `cognara.local.db-password`, and
+`cognara.local.jwt-secret`.
 
 ---
 
@@ -92,7 +94,7 @@ java -jar target\cognara-backend-0.0.1-SNAPSHOT.jar
 
 ## Known Issues / Limitations
 
-- **Tenant Isolation Boundaries:** Cross-company user lookups are prevented at the data model (`company_id, email` unique index) and repository query level (`findByCompanyIdAndEmail`), but runtime authentication (JWT tokens, security context tenant extraction) is not yet implemented. Tenant isolation cannot be considered complete until authorization middleware is in place.
+- **Tenant Isolation Boundaries:** JWTs carry a verified `companyId`. Company reads require the same company claim, and user reads are repository-scoped by both user ID and company ID. User creation requires a matching tenant token. Company registration is public by design, but the current model has no role or atomic first-owner registration flow; first-user provisioning is an intentional remaining operational gap.
 - **Database Schema Sync:** Production environment uses `ddl-auto=validate`. Initial database tables (`companies`, `users`) need to be created via migration or initial DDL script. Database migration tool (Flyway) is scheduled for the next milestone.
 
 ---
